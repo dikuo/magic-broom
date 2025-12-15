@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================================
+    // HELPER FUNCTIONS (Role Checks)
+    // =========================================================================
+
+    function isAdmin() {
+      // Checks if the user's role in the /users collection is 'admin'
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isCleaner() {
+      // Checks if the user's role in the /users collection is 'cleaner'
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'cleaner';
+    }
+    
+    // =========================================================================
+    // USERS COLLECTION (User Role Data)
+    // =========================================================================
+    match /users/{userId} {
+      // 1. Read: Allows any authenticated user to read their own document
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // 2. Update: Allows admin to update any user, or user to update their own non-role fields
+      allow update: if isAdmin() || 
+                       (request.auth.uid == userId && !('role' in request.resource.data));
+      
+      // 3. Create: Allows user to create their own document, and prevents them from setting 'admin' or 'cleaner' role initially
+      allow create: if request.auth.uid == userId && 
+                       (!('role' in request.resource.data) || request.resource.data.role == 'user');
+    }
+
+    // =========================================================================
+    // CLEANER APPLICATIONS COLLECTION (Admin Management & Profile Check)
+    // =========================================================================
+    match /cleanerApplications/{applicationId} {
+      // 1. Read (FIX for Profile.jsx): Allows admin to read all, OR the user to read their own application status.
+      allow read: if isAdmin() || request.auth.uid == applicationId;
+      
+      // 2. Create: Allows any authenticated user to submit an application
+      allow create: if request.auth != null && 
+                       request.resource.data.userId == request.auth.uid && 
+                       request.resource.data.status == 'pending';
+
+      // 3. Update: Only allows admin to update the application status
+      allow update: if isAdmin();
+    }
+
+    // =========================================================================
+    // CLEANING REQUESTS COLLECTION (Order Management)
+    // =========================================================================
+    match /cleaningRequests/{cleaningRequestId} {
+      // 1. Read (get): Allows Admin or the user who created the request to read their specific document
+      allow read: if isAdmin() || request.auth.uid == resource.data.userId;
+
+      // 2. List (Cleaner List View): Allows Admin OR Cleaners to list/read the requests collection.
+      allow list: if isAdmin() || isCleaner();
+
+      // 3. Create: Only allows authenticated users to create a request
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+      
+      // 4. Update: Allows Admin, the user who created the request, or a Cleaner to accept/update the request
+      allow update: if isAdmin() || request.auth.uid == resource.data.userId || isCleaner(); 
+      
+      // 5. Delete: Only allows Admin or the user who created the request to delete it
+      allow delete: if isAdmin() || request.auth.uid == resource.data.userId;
+    }
+
+    // =========================================================================
+    // DEFAULT LOCKDOWN (Default Lock)
+    // =========================================================================
+    // Default lock for all collections not explicitly defined above
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
