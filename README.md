@@ -3,9 +3,8 @@
 <div align="center">
 
 [![Live Demo](https://img.shields.io/badge/🌐%20Live%20Demo-Magic%20Broom-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://magic-broom.vercel.app/)
-[![GitHub](https://img.shields.io/badge/📦%20GitHub-Repository-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/dikuo/magic-broom)
 
-**[🌐 View Live Demo →](https://magic-broom.vercel.app/)** | **[📦 View Source Code →](https://github.com/dikuo/magic-broom)**
+**[🌐 View Live Demo →](https://magic-broom.vercel.app/)**
 
 </div>
 
