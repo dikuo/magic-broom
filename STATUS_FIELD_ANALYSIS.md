@@ -283,3 +283,4 @@ User signs up → "unverified" → (Email verification handled separately, statu
    - There's no code to update user status from "unverified" to "verified" after email verification
    - There's no code to update cleaning request status from "accepted" back to "pending" (cancellation)
 
+
