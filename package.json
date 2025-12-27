@@ -17,17 +17,12 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
-    "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
-    "@lottiefiles/dotlottie-react": "0.6.5",
     "@react-native-async-storage/async-storage": "1.23.1",
     "@react-native-community/datetimepicker": "8.2.0",
     "@react-native-masked-view/masked-view": "^0.3.2",
-    "@react-native-picker/picker": "2.9.0",
     "@react-navigation/bottom-tabs": "^7.2.0",
     "@react-navigation/native": "^7.0.14",
     "axios": "^0.24.0",
-    "date-fns": "^2.28.0",
-    "datetimepicker": "^0.1.39",
     "dotenv": "^17.2.3",
     "expo": "~52.0.38",
     "expo-blur": "~14.0.3",
@@ -52,13 +47,11 @@
     "react-native-gesture-handler": "~2.20.2",
     "react-native-get-random-values": "^1.11.0",
     "react-native-google-places-autocomplete": "2.5.6",
-    "react-native-modal-datetime-picker": "^13.0.0",
     "react-native-reanimated": "~3.16.1",
     "react-native-safe-area-context": "^4.12.0",
     "react-native-screens": "~4.4.0",
     "react-native-vector-icons": "^10.2.0",
-    "react-native-web": "~0.19.13",
-    "react-native-webview": "13.12.5"
+    "react-native-web": "~0.19.13"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
