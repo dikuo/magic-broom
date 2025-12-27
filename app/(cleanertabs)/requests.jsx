@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity, StyleSheet,ImageBackground } from "react-native";
-import { collection, getDocs, updateDoc, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, doc, getDoc, runTransaction } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig";
 import bground from "@/assets/images/light-purple-glitter-background-nkx73.png"
 
@@ -40,34 +40,38 @@ const AvailableRequestsScreen = () => {
     }
   
     try {
-      // Fetch request details
       const requestRef = doc(db, "cleaningRequests", requestId);
-      const requestSnap = await getDoc(requestRef);
+      
+      // Use transaction to ensure atomic status update with concurrency control
+      await runTransaction(db, async (transaction) => {
+        // Get the current request document within the transaction
+        const requestSnap = await transaction.get(requestRef);
   
-      if (!requestSnap.exists()) {
-        alert("Request does not exist.");
-        return;
-      }
+        if (!requestSnap.exists()) {
+          throw new Error("Request does not exist.");
+        }
   
-      const requestData = requestSnap.data();
+        const requestData = requestSnap.data();
   
-      // Prevent user from accepting their own request
-      if (user.uid === requestData.userId) {
-        alert("You cannot accept your own request.");
-        return;
-      }
+        // Prevent user from accepting their own request
+        if (user.uid === requestData.userId) {
+          throw new Error("You cannot accept your own request.");
+        }
 
-      // Prevent accepting an already accepted request
-      if (requestData.status !== "pending") {
-        alert("This request has already been accepted.");
-        return;
-      }
+        // Verify the current status is exactly 'pending' before updating
+        if (requestData.status !== "pending") {
+          if (requestData.status === "accepted") {
+            throw new Error("Job already claimed");
+          }
+          throw new Error("This request has already been accepted.");
+        }
   
-      // Update the request status and assign the cleaner
-      await updateDoc(requestRef, {
-        status: "accepted",
-        cleanerId: user.uid,
-        cleanerEmail: cleanerEmail, // Store cleaner's email
+        // Update the request status and assign the cleaner within the transaction
+        transaction.update(requestRef, {
+          status: "accepted",
+          cleanerId: user.uid,
+          cleanerEmail: cleanerEmail, // Store cleaner's email
+        });
       });
 
       // Remove the accepted request from the UI
@@ -77,7 +81,12 @@ const AvailableRequestsScreen = () => {
       alert("Request successfully assigned to you!");
     } catch (error) {
       console.error("Error updating request:", error);
-      alert("Error: You don't have permission to accept this request.");
+      // Show specific error message if it's the "Job already claimed" error
+      if (error.message === "Job already claimed") {
+        alert("Job already claimed");
+      } else {
+        alert(`Error: ${error.message || "You don't have permission to accept this request."}`);
+      }
     }
   };
 

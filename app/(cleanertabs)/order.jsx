@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, ImageBackground, Alert, Text, FlatList, StyleSheet, TouchableOpacity } from "react-native";
-import { collection, query, where, onSnapshot, getDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDoc, doc, runTransaction } from "firebase/firestore";
 import { db, auth } from "../firebaseConfig"; // Ensure this path is correct
 import bground from "@/assets/images/light-purple-glitter-background-nkx73.png"
 
@@ -54,12 +54,31 @@ const CleanerAcceptedOrdersScreen = () => {
   const markAsCompleted = async (requestId) => {
     try {
       const requestRef = doc(db, "cleaningRequests", requestId);
-      await updateDoc(requestRef, { status: "Completed" });
+      
+      // Use transaction to ensure atomic status update with concurrency control
+      await runTransaction(db, async (transaction) => {
+        // Get the current request document within the transaction
+        const requestSnap = await transaction.get(requestRef);
+        
+        if (!requestSnap.exists()) {
+          throw new Error("Request does not exist.");
+        }
+        
+        const requestData = requestSnap.data();
+        
+        // Verify the current status is 'accepted' before updating to 'Completed'
+        if (requestData.status !== "accepted") {
+          throw new Error(`Cannot complete request. Current status is: ${requestData.status}. Expected status: accepted`);
+        }
+        
+        // Update the status to 'Completed' within the transaction
+        transaction.update(requestRef, { status: "Completed" });
+      });
 
       Alert.alert("Success", "Order marked as completed!");
     } catch (error) {
       console.error("Error updating request status:", error);
-      Alert.alert("Error", "Failed to mark order as completed.");
+      Alert.alert("Error", error.message || "Failed to mark order as completed.");
     }
   };
 

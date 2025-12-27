@@ -4,7 +4,7 @@ const admin = require('firebase-admin');
 
 // ************* 请替换您的密钥文件路径 *************
 const serviceAccount = require('./serviceAccountKey.json'); 
-const TARGET_UID = 'IISmWozfPLXc59a0WrN4z4InMYW2'; 
+const TARGET_UID = 'griyPsQGlBPq8ZFXirawqHAgkWj2'; 
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)

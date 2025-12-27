@@ -28,6 +28,10 @@ PlanDocs
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
+firebase-debug.log
+functions/firebase-debug.log
+**/firebase-debug.log
 
 # macOS
 .DS_Store
